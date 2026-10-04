@@ -32,6 +32,16 @@ local NOTCH_Y = 967.85                -- side notch centre
 local NOTCH_DX = 3                    -- notch circle centre sits 3px outside the edge
 local SCALLOPS = 8                    -- 8 bites per edge, centres every W/8 (corners included)
 
+-- design px -> screen px. 1 when the receipt fits (portrait 1264x1680), smaller
+-- when it does not (landscape, e.g. Kobo Libra Colour 1680x1264): the whole
+-- ticket shrinks uniformly so the layout never changes, only its size.
+local MARGIN = 24                     -- screen px kept free around the ticket
+local S = 1
+local function fitScale(sw, sh)
+    S = math.min(1, (sw - 2 * MARGIN) / W, (sh - 2 * MARGIN) / H)
+    return S
+end
+
 -- fonts (file names as installed in koreader/fonts)
 local FONT_CN = "FZHengFSJF-SB.ttf"
 local FONT_LA = "FZFWZhuZGDSMCJW.ttf"
@@ -62,29 +72,25 @@ local ITEMS = {
   {x=34.12,top=136,f="L",size=72,ls=0.03,c="K",t="READ RECEIPT"},
   {x=34.36,top=232.58,f="C",size=25,ls=-0.78,c="K",t="今日閲讀軌跡"},
   {x=190.16,top=232.92,f="L",size=25,ls=0,c="K",t="/"},
-  {x=204.52,top=232.2,f="L",size=25,ls=-0.73,c="K",t="TODAY"},
-  {x=282.64,top=236.2,f="L",size=25,ls=0,c="K",t="’"},
-  {x=299.32,top=232.68,f="L",size=25,ls=0,c="K",t="S"},
-  {x=316.6,top=232.2,f="L",size=25,ls=-0.26,c="K",t="READING"},
-  {x=429.64,top=232.2,f="L",size=25,ls=-0.42,c="K",t="TRAIL"},
-  {x=68.16,top=346.35,f="C",size=16.5,ls=0.07,c="G1",t="當日日期"},
-  {x=134,top=340,f="L",size=30,ls=0,c="G1",t="•"},
-  {x=161.12,top=346.24,f="L",size=15.5,ls=-0.2,c="G1",t="DATE"},
-  {x=319.24,top=344.75,f="C",size=16,ls=-0.12,c="G1",t="星期"},
-  {x=353,top=340,f="L",size=30,ls=0,c="G1",t="•"},
-  {x=382.16,top=346.24,f="L",size=15.5,ls=-0.51,c="G1",t="DAY"},
-  {x=583,top=344.51,f="C",size=16,ls=0.47,c="G1",t="閲讀起始日"},
-  {x=663,top=339,f="L",size=30,ls=0,c="G1",t="•"},
-  {x=691.24,top=346.24,f="L",size=15.5,ls=0.18,c="G1",t="START DATE"},
+  {x=204.52,top=232.2,f="L",size=25,ls=0,c="K",t="TODAY'S READING TRAIL"},
+  {x=68.16,top=345.56,f="C",size=17.5,ls=0.07,c="G1",t="當日日期"},
+  {x=138,top=340,f="L",size=30,ls=0,c="G1",t="•"},
+  {x=165.12,top=345.48,f="L",size=16.5,ls=-0.2,c="G1",t="DATE"},
+  {x=319.24,top=343.96,f="C",size=17,ls=-0.12,c="G1",t="星期"},
+  {x=355,top=340,f="L",size=30,ls=0,c="G1",t="•"},
+  {x=384.16,top=345.48,f="L",size=16.5,ls=-0.51,c="G1",t="WEEK"},
+  {x=583,top=343.72,f="C",size=17,ls=0.47,c="G1",t="閲讀起始日"},
+  {x=668,top=339,f="L",size=30,ls=0,c="G1",t="•"},
+  {x=696.24,top=345.48,f="L",size=16.5,ls=0.18,c="G1",t="START DATE"},
   {x=70.08,top=371.53,f="L",size=36,ls=-0.61,c="K",t="08.28.2026",key="date"},
   {x=317.76,top=371.13,f="C",size=34,ls=0.92,c="K",t="周五",key="weekday_cn"},
   {x=397.4,top=371.37,f="C",size=34,ls=0,c="K",t="・"},
   {x=441.16,top=371.69,f="L",size=36,ls=-0.97,c="K",t="FRI",key="weekday_en"},
   {x=582.24,top=371.53,f="L",size=36,ls=-0.61,c="K",t="08.27.2026",key="start_date"},
   {x=36.92,top=453.9,f="C",size=30,ls=0.49,c="K",t="當前閲讀"},
-  {x=39.66,top=491.1,f="L",size=30,ls=-0.07,c="K",t="Heart the Lover",key="title",maxw=460},
-  {x=36.76,top=571.04,f="C",size=23,ls=0.28,c="K",t="作者"},
-  {x=89.56,top=568.43,f="L",size=26,ls=0.67,c="K",t="Lily King",key="author",maxw=400},
+  {x=39.66,top=489.58,f="L",size=32,ls=-0.07,c="K",t="Heart the Lover",key="title",maxw=460},
+  {x=36.76,top=565.5,f="C",size=30,ls=0.28,c="K",t="作者"},
+  {x=104,top=566.38,f="L",size=30,ls=0.67,c="K",t="Lily King",key="author",maxw=400},
   {x=33.84,top=771.8,f="C",size=32,ls=0.71,c="K",t="剩餘進度"},
   {x=184.8,top=772.08,f="C",size=32,ls=0,c="K",t="・"},
   {x=230.24,top=772.86,f="L",size=32,ls=0.27,c="K",t="4 hr 16 m",key="left_time"},
@@ -122,11 +128,12 @@ local floor, ceil, sqrt, abs = math.floor, math.ceil, math.sqrt, math.abs
 
 local function px(v) return floor(v + 0.5) end
 
+-- x, y, w, h in design px; scaled by S here
 local function rect(bb, ox, oy, x, y, w, h, c)
-    w, h = px(w), px(h)
+    w, h = px(w * S), px(h * S)
     if w < 1 then w = 1 end
     if h < 1 then h = 1 end
-    bb:paintRect(ox + px(x), oy + px(y), w, h, c)
+    bb:paintRect(ox + px(x * S), oy + px(y * S), w, h, c)
 end
 
 local function dashedH(bb, ox, oy, x1, x2, y, weight, dash, gap, offset, c)
@@ -142,11 +149,14 @@ local function dashedH(bb, ox, oy, x1, x2, y, weight, dash, gap, offset, c)
 end
 
 local function disc(bb, ox, oy, cx, cy, r, c)
+    cx, cy, r = cx * S, cy * S, r * S
     for dy = -ceil(r), ceil(r) do
         local hw = r * r - dy * dy
         if hw > 0 then
             hw = sqrt(hw)
-            rect(bb, ox, oy, cx - hw, cy + dy, hw * 2, 1, c)
+            local w = px(hw * 2)
+            if w < 1 then w = 1 end
+            bb:paintRect(ox + px(cx - hw), oy + px(cy + dy), w, 1, c)
         end
     end
 end
@@ -217,29 +227,34 @@ local function colSpans(x)
     return spans
 end
 
+-- scans screen rows / columns and asks the design-space outline for each
 local function paintPaper(bb, ox, oy)
     local rows = {}
-    for y = 0, px(H) do rows[y] = rowSpans(y) end
-    for y = 0, px(H) do
+    for y = 0, px(H * S) do
+        local r = {}
+        for _, s in ipairs(rowSpans(y / S)) do
+            local a, b = px(s[1] * S), px(s[2] * S)
+            if b - a >= 1 then r[#r + 1] = { a, b } end
+        end
+        rows[y] = r
+    end
+    for y = 0, px(H * S) do
         for _, s in ipairs(rows[y]) do
-            if s[2] - s[1] >= 1 then
-                bb:paintRect(ox + px(s[1]), oy + y, px(s[2]) - px(s[1]), 1, Blitbuffer.COLOR_WHITE)
-            end
+            bb:paintRect(ox + s[1], oy + y, s[2] - s[1], 1, Blitbuffer.COLOR_WHITE)
         end
     end
-    for y = 0, px(H) do
+    for y = 0, px(H * S) do
         for _, s in ipairs(rows[y]) do
-            if s[2] - s[1] >= 1 then
-                bb:paintRect(ox + px(s[1]), oy + y, 1, 1, Blitbuffer.COLOR_BLACK)
-                bb:paintRect(ox + px(s[2]) - 1, oy + y, 1, 1, Blitbuffer.COLOR_BLACK)
-            end
+            bb:paintRect(ox + s[1], oy + y, 1, 1, Blitbuffer.COLOR_BLACK)
+            bb:paintRect(ox + s[2] - 1, oy + y, 1, 1, Blitbuffer.COLOR_BLACK)
         end
     end
-    for x = 0, px(W) do
-        for _, s in ipairs(colSpans(x)) do
-            if s[2] - s[1] >= 1 then
-                bb:paintRect(ox + x, oy + px(s[1]), 1, 1, Blitbuffer.COLOR_BLACK)
-                bb:paintRect(ox + x, oy + px(s[2]) - 1, 1, 1, Blitbuffer.COLOR_BLACK)
+    for x = 0, px(W * S) do
+        for _, s in ipairs(colSpans(x / S)) do
+            local a, b = px(s[1] * S), px(s[2] * S)
+            if b - a >= 1 then
+                bb:paintRect(ox + x, oy + a, 1, 1, Blitbuffer.COLOR_BLACK)
+                bb:paintRect(ox + x, oy + b - 1, 1, 1, Blitbuffer.COLOR_BLACK)
             end
         end
     end
@@ -248,7 +263,11 @@ end
 -- ------------------------------------------------------------------- text --
 local face_cache = {}
 local function paths(basenames)
-    local dirs = { "", "/mnt/us/koreader/fonts/", "/mnt/us/fonts/", "fonts/" }
+    local dirs = { "", "fonts/",
+        "/mnt/us/koreader/fonts/", "/mnt/us/fonts/",                       -- Kindle
+        "/mnt/onboard/.adds/koreader/fonts/", "/mnt/onboard/fonts/" }      -- Kobo
+    local ok_ds, DataStorage = pcall(require, "datastorage")
+    if ok_ds then table.insert(dirs, 2, DataStorage:getDataDir() .. "/fonts/") end
     local out = {}
     for _, base in ipairs(basenames) do
         for _, ext in ipairs({ ".ttf", ".TTF" }) do
@@ -623,8 +642,17 @@ end
 
 function Receipt:getSize() return self.dimen end
 
+-- the device was rotated while the receipt is up: follow the new screen size
+-- (dimen is updated in place so the gesture ranges follow too)
+function Receipt:onSetDimensions(dimen)
+    self.dimen.w, self.dimen.h = Screen:getWidth(), Screen:getHeight()
+    UIManager:setDirty(self, "full")
+end
+
 function Receipt:onHold()
-    local dir = "/mnt/us/koreader/screenshots"
+    local DataStorage = require("datastorage")
+    local dir = G_reader_settings:readSetting("screenshot_dir")
+        or (DataStorage:getDataDir() .. "/screenshots")
     pcall(function() require("libs/libkoreader-lfs").mkdir(dir) end)
     local path = dir .. "/read-receipt-" .. os.date("%Y%m%d-%H%M%S") .. ".png"
     local ok = pcall(function() Screen:shot(path) end)
@@ -640,9 +668,10 @@ function Receipt:onTap() UIManager:close(self) return true end
 function Receipt:onClose() UIManager:close(self) return true end
 
 function Receipt:paintTo(bb, x, y)
-    local ox = x + px((Screen:getWidth() - W) / 2)
-    local oy = y + px((Screen:getHeight() - H) / 2)
     local sw, sh = Screen:getWidth(), Screen:getHeight()
+    fitScale(sw, sh)
+    local ox = x + px((sw - W * S) / 2)
+    local oy = y + px((sh - H * S) / 2)
     bb:paintRect(x, y, sw, sh, Blitbuffer.COLOR_WHITE)
     -- the book cover fills the screen behind the receipt, faded back so the
     -- ticket stays legible
@@ -664,7 +693,7 @@ function Receipt:paintTo(bb, x, y)
     rect(bb, ox, oy, 540.4, 339.9, 1, 66, COL.DIV1)
     -- cover: the real book cover, scaled to fill and centre-cropped
     local function paintCover()
-        local cx, cy, cw, ch = px(512.9), px(450.5), px(302.9), px(399.6)
+        local cx, cy, cw, ch = px(512.9 * S), px(450.5 * S), px(302.9 * S), px(399.6 * S)
         if not blitCoverInto(bb, self:getCover(), ox + cx, oy + cy, cw, ch) then
             bb:paintRect(ox + cx, oy + cy, cw, ch, COL.COVER)   -- only when there is no cover
         end
@@ -706,19 +735,20 @@ function Receipt:paintTo(bb, x, y)
         local text = it.t
         if it.key and data[it.key] then text = data[it.key] end
         if text ~= "" then
-            local face = getFace(it.f, it.size)
-            local alt = getFace(it.f == "C" and "L" or "C", it.size)
+            local face = getFace(it.f, it.size * S)
+            local alt = getFace(it.f == "C" and "L" or "C", it.size * S)
             local k = it.f == "C" and K_CN or K_LA
-            if it.maxw and textWidth(face, text) > it.maxw then
+            local maxw = it.maxw and it.maxw * S
+            if maxw and textWidth(face, text) > maxw then
                 local chars = utf8chars(text)
-                while #chars > 1 and textWidth(face, table.concat(chars) .. "…") > it.maxw do
+                while #chars > 1 and textWidth(face, table.concat(chars) .. "…") > maxw do
                     table.remove(chars)
                 end
                 text = table.concat(chars) .. "…"
             end
-            local sx = it.follow and (pen + it.follow) or (ox + it.x)
-            local ok, res = pcall(drawText, bb, sx, oy + it.top + k * it.size,
-                                  face, alt, text, it.ls, COL[it.c])
+            local sx = it.follow and (pen + it.follow * S) or (ox + it.x * S)
+            local ok, res = pcall(drawText, bb, sx, oy + (it.top + k * it.size) * S,
+                                  face, alt, text, (it.ls or 0) * S, COL[it.c])
             if ok then pen = res else logger.warn("read-receipt: draw failed", text, res) end
         end
     end
@@ -865,12 +895,9 @@ if ok_ss then
             self.screensaver_widget = nil
         end
         Device.screen_saver_mode = true
-        local rotation_mode = Screen:getRotationMode()
+        -- the receipt fits either orientation now, so the sleep screen stays in
+        -- whatever orientation the reader is held (landscape included)
         Device.orig_rotation_mode = nil
-        if bit.band(rotation_mode, 1) == 1 then
-            Device.orig_rotation_mode = rotation_mode
-            Screen:setRotationMode(Screen.DEVICE_ROTATED_UPRIGHT)
-        end
         local receipt = Receipt:new{
             ui = ui, document = ui.document, is_screensaver = true,
         }
